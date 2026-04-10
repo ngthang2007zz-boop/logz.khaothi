@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống thi TSA - LogZ 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+        window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <div id="page-login" class="page active min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-blue-800 to-slate-900 p-4">
+        <div class="max-w-md w-full glass-card rounded-3xl shadow-2xl p-8 border border-white/20">
+            <div class="text-center mb-8">
+                <div class="text-4xl font-black text-blue-600 mb-2 tracking-tighter italic underline">LogZ TSA</div>
+                <p class="text-slate-500 font-medium">Hệ thống luyện thi tư duy 2026</p>
+            </div>
+            
+            <div class="flex bg-slate-100 p-1 rounded-xl mb-6">
+                <button onclick="toggleTab('student')" id="tab-student" class="flex-1 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-blue-600 transition-all">HỌC SINH</button>
+                <button onclick="toggleTab('admin')" id="tab-admin" class="flex-1 py-2 rounded-lg text-sm font-bold text-slate-500 transition-all">QUẢN TRỊ</button>
+            </div>
+
+            <div id="form-student" class="space-y-4">
+                <input type="text" id="student-name" placeholder="Họ và tên thí sinh" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <input type="text" id="exam-code" placeholder="Mã phòng thi (VD: TSA2026)" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase tracking-widest">
+                <button onclick="checkStudentAccess()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">VÀO PHÒNG THI</button>
+            </div>
+
+            <div id="form-admin" class="space-y-4 hidden">
+                <input type="email" id="admin-email" placeholder="Email quản trị" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                <input type="password" id="admin-password" placeholder="Mật khẩu" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                <button onclick="checkAdminAccess()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95">ĐĂNG NHẬP ADMIN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-exam" class="page min-h-screen flex flex-col">
+        <header class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-1.5 rounded-lg text-xs font-bold">LogZ</div>
+                <div class="font-bold text-slate-700 hidden sm:block">Thí sinh: <span id="display-name" class="text-blue-600">---</span></div>
+            </div>
+            <div class="bg-red-50 px-5 py-2 rounded-full border border-red-200">
+                <i class="fa-regular fa-clock text-red-500 mr-2"></i>
+                <span class="text-red-600 font-mono font-bold text-xl" id="timer">60:00</span>
+            </div>
+            <button onclick="confirmSubmit()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md shadow-red-500/20">NỘP BÀI</button>
+        </header>
+
+        <main class="flex-1 max-w-7xl mx-auto w-full p-6 grid grid-cols-12 gap-6">
+            <div class="col-span-12 lg:col-span-8">
+                <div class="bg-white p-8 rounded-3xl border shadow-sm min-h-[400px]">
+                    <div id="question-area">
+                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider">Câu hỏi 15</span>
+                        <div class="text-xl mt-6 mb-8 leading-relaxed font-semibold text-slate-800">
+                            Cho hình chóp $S.ABC$ có đáy $ABC$ là tam giác đều cạnh $a$. Tính thể tích khối chóp biết chiều cao h bằng $a\sqrt{3}$.
+                        </div>
+                        <div class="grid gap-4">
+                            <label class="flex items-center p-5 border-2 rounded-2xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all group">
+                                <input type="radio" name="ans" class="w-5 h-5 accent-blue-600">
+                                <span class="ml-4 font-medium text-slate-700 group-hover:text-blue-700">A. $V = \frac{a^3}{4}$</span>
+                            </label>
+                            <label class="flex items-center p-5 border-2 rounded-2xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all group">
+                                <input type="radio" name="ans" class="w-5 h-5 accent-blue-600">
+                                <span class="ml-4 font-medium text-slate-700 group-hover:text-blue-700">B. $V = \frac{a^3\sqrt{3}}{12}$</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                    <button class="text-slate-400 font-bold hover:text-blue-600 transition-colors italic px-4 py-2">← Câu trước</button>
+                    <button class="bg-slate-900 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-slate-800">Câu tiếp theo →</button>
+                </div>
+            </div>
+
+            <div class="col-span-12 lg:col-span-4 space-y-6">
+                <div class="bg-white p-6 rounded-3xl border h-fit sticky top-24 shadow-sm">
+                    <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-blue-500"></i> Bảng điều hướng
+                    </h3>
+                    <div class="grid grid-cols-5 gap-2" id="exam-nav">
+                        </div>
+                    <div class="mt-6 pt-6 border-t text-xs text-slate-400 italic">
+                        Lưu ý: Hệ thống sẽ tự nộp bài nếu bạn thoát khỏi trình duyệt.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="page-admin" class="page min-h-screen bg-slate-50 flex">
+        <aside class="w-64 bg-slate-900 text-white p-6 hidden md:block h-screen sticky top-0">
+            <div class="text-2xl font-black italic underline text-blue-400 mb-10">LogZ Admin</div>
+            <nav class="space-y-4">
+                <a href="#" class="flex items-center gap-3 p-3 bg-blue-600 rounded-xl font-bold"><i class="fa-solid fa-folder-open"></i> Kho đề thi</a>
+                <a href="#" class="flex items-center gap-3 p-3 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-users"></i> Thí sinh</a>
+                <a href="#" class="flex items-center gap-3 p-3 text-slate-400 hover:text-white transition-all"><i class="fa-solid fa-chart-pie"></i> Thống kê</a>
+            </nav>
+            <button onclick="location.reload()" class="absolute bottom-10 left-6 text-red-400 font-bold">Đăng xuất</button>
+        </aside>
+
+        <main class="flex-1 p-8">
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-8">Quản lý nội dung học thuật</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-3xl border shadow-sm">
+                    <h2 class="font-bold text-xl mb-6 flex items-center gap-2"><i class="fa-solid fa-file-export text-blue-500"></i> Upload đề thi (.tex)</h2>
+                    <div class="space-y-5">
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center hover:bg-slate-50 transition-all cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-300 mb-4"></i>
+                            <p class="text-slate-500 text-sm">Chọn file LaTeX hoặc kéo thả vào đây</p>
+                        </div>
+                        <input type="text" placeholder="Nhập mã phòng thi (Exam Code)" class="w-full p-3 border rounded-xl outline-none">
+                        <textarea placeholder="Nhập đáp án (VD: 1A, 2B, 3D...)" class="w-full p-3 border rounded-xl h-24 outline-none"></textarea>
+                        <button onclick="alert('Đề thi đã được tải lên LogZ và sẵn sàng vận hành!')" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all">ĐĂNG ĐỀ LÊN HỆ THỐNG</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl border shadow-sm">
+                    <h2 class="font-bold text-xl mb-6 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-yellow-500"></i> Điểm thi gần đây</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <tr class="text-slate-400 border-b uppercase text-[10px] font-bold tracking-widest">
+                                <th class="pb-3">Học sinh</th>
+                                <th class="pb-3">Mã đề</th>
+                                <th class="pb-3">Điểm</th>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-3 font-bold">Nguyễn Văn A</td>
+                                <td class="py-3 text-slate-500">TSA2026</td>
+                                <td class="py-3 text-blue-600 font-bold text-right">9.2</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="page-result" class="page p-6 min-h-screen bg-slate-100 flex items-center justify-center">
+        <div class="max-w-2xl w-full bg-white rounded-[40px] shadow-2xl p-10 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
+            <h1 class="text-2xl font-bold text-slate-800 mb-2">Kết quả bài thi TSA</h1>
+            <p class="text-slate-400 mb-8 uppercase text-xs font-bold tracking-widest">Hoàn thành lúc: 10/04/2026</p>
+            
+            <div class="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-blue-600">
+                <span class="text-4xl font-black text-blue-600">8.5</span>
+            </div>
+
+            <div class="space-y-4 text-left">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-bold text-slate-700 italic">Câu hỏi 1 (Sai)</span>
+                        <button onclick="toggleAISolution()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-xs font-bold transition-all hover:bg-purple-200">
+                            <i class="fa-solid fa-robot mr-1"></i> AI GIẢI CHI TIẾT
+                        </button>
+                    </div>
+                    <div id="ai-box" class="hidden mt-4 bg-white p-4 rounded-xl border-l-4 border-purple-500 text-sm leading-relaxed text-slate-600 animate-fadeIn">
+                        <b class="text-purple-600">LogZ AI phân tích:</b><br>
+                        Dựa trên công thức thể tích khối chóp $V = \frac{1}{3} S_{đáy} \cdot h$. <br>
+                        Với đáy là tam giác đều cạnh $a$, diện tích $S = \frac{a^2\sqrt{3}}{4}$. <br>
+                        $\rightarrow$ Kết quả: $V = \frac{1}{3} \cdot \frac{a^2\sqrt{3}}{4} \cdot a\sqrt{3} = \frac{a^3}{4}$. <br>
+                        <b>Đáp án đúng: A.</b>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="mt-10 text-blue-600 font-bold hover:underline italic underline-offset-4">Về trang chủ đăng nhập</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. CHUYỂN TAB ĐĂNG NHẬP
+        function toggleTab(type) {
+            const btnS = document.getElementById('tab-student');
+            const btnA = document.getElementById('tab-admin');
+            const formS = document.getElementById('form-student');
+            const formA = document.getElementById('form-admin');
+
+            if (type === 'student') {
+                btnS.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                btnA.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                formS.classList.remove('hidden');
+                formA.classList.add('hidden');
+            } else {
+                btnA.classList.add('bg-white', 'shadow-sm', 'text-blue-600', 'text-indigo-600');
+                btnS.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                formA.classList.remove('hidden');
+                formS.classList.add('hidden');
+            }
+        }
+
+        // 2. CHUYỂN TRANG
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // 3. KIỂM TRA ĐĂNG NHẬP ADMIN (Thông tin bạn cung cấp)
+        function checkAdminAccess() {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+
+            if (email === "yuunohuy@gmail.com" && pass === "Cnmeo123") {
+                showPage('page-admin');
+            } else {
+                alert("Thông tin Admin không chính xác!");
+            }
+        }
+
+        // 4. KIỂM TRA ĐĂNG NHẬP HỌC SINH
+        function checkStudentAccess() {
+            const name = document.getElementById('student-name').value;
+            const code = document.getElementById('exam-code').value;
+
+            if (name && code.toUpperCase() === "TSA2026") {
+                document.getElementById('display-name').innerText = name.toUpperCase();
+                if(confirm("XÁC NHẬN VÀO THI?\nLưu ý: Nếu bạn thoát tab hoặc cửa sổ, hệ thống sẽ tự nộp bài!")) {
+                    startExam();
+                }
+            } else {
+                alert("Vui lòng nhập tên và mã phòng hợp lệ (TSA2026)");
+            }
+        }
+
+        // 5. BẮT ĐẦU THI & CHỐNG GIAN LẬN
+        function startExam() {
+            showPage('page-exam');
+            initExamNav();
+            startTimer(60); // 60 phút
+
+            // PHÁT HIỆN THOÁT TAB (CHỐNG GIAN LẬN)
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') {
+                    alert("CẢNH BÁO: BẠN ĐÃ THOÁT KHỎI PHÒNG THI. HỆ THỐNG TỰ ĐỘNG NỘP BÀI!");
+                    submitExam();
+                }
+            });
+
+            // Chặn F5
+            window.onbeforeunload = function() { return "Bài thi đang diễn ra, bạn có chắc muốn thoát?"; };
+        }
+
+        // 6. BỘ ĐẾM THỜI GIAN
+        function startTimer(minutes) {
+            let seconds = minutes * 60;
+            const display = document.getElementById('timer');
+            const interval = setInterval(() => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                display.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    submitExam();
+                }
+                seconds--;
+            }, 1000);
+        }
+
+        // 7. TẠO NAVIGATION CÂU HỎI
+        function initExamNav() {
+            const nav = document.getElementById('exam-nav');
+            nav.innerHTML = '';
+            for (let i = 1; i <= 40; i++) {
+                const btn = document.createElement('button');
+                btn.className = "h-10 border rounded-xl flex items-center justify-center font-bold text-xs hover:border-blue-500 transition-all";
+                btn.innerText = i;
+                nav.appendChild(btn);
+            }
+        }
+
+        function confirmSubmit() {
+            if (confirm("Bạn có chắc chắn muốn nộp bài ngay bây giờ?")) submitExam();
+        }
+
+        function submitExam() {
+            window.onbeforeunload = null;
+            showPage('page-result');
+        }
+
+        function toggleAISolution() {
+            document.getElementById('ai-box').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
